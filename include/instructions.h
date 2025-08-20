@@ -46,7 +46,8 @@ MACRO_TRACK(REGISTERS)
 MACRO_DISPLAY(REGISTERS, reg_to_str)
 
 struct instr {
-	unsigned char opcode;
+	unsigned char opcode : 7;
+	unsigned char imm_flag : 1;
 	unsigned char dest : 4;
 	unsigned char src1 : 4;
 	uint16_t imm;
