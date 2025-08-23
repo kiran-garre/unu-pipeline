@@ -179,22 +179,22 @@ def assemble_instruction(instr: str) -> int:
 	parts = instr.replace(",", " ").split()
 	if len(instr) < 3:
 		raise AssemblyError(f"not enough arguments")
+	
+	# Set default values
+	dest, src1, src2 = 0, 0, 0
 
 	opcode = get_opcode(parts[0])
 	dest = get_reg(parts[1])
-
-	# Set default values
-	dest, src1, src2 = 0, 0, 0
 
 	# Handle mov as a special case
 	if opcode == OPCODES["mov"] or opcode == OPCODES["brn"]:
 		if len(parts) != 3:
 			raise AssemblyError(f"invalid number of arguments for {parts[0]}")
 		elif parts[2][0] == "#":
-			src1 = get_imm(parts[2])
+			src2 = get_imm(parts[2])
 			imm_flag = 1
 		else:
-			src1 = get_reg(parts[2])
+			src2 = get_reg(parts[2])
 			imm_flag = 0
 
 	else:
@@ -219,7 +219,7 @@ def assemble_instruction(instr: str) -> int:
 	result |= (dest & 0xF) << 20
 	result |= (src1 & 0xF) << 16
 	result |= (src2 & 0xFFFF)
-	return struct.pack("<I", result)
+	return struct.pack(">I", result)
 		
 
 def is_number(candidate: str) -> bool:
@@ -249,7 +249,6 @@ def assemble_all_instructions(instrs: list[str], line_numbers: list[int]) -> lis
 			result.append(None)
 	
 	if errors:
-		# print(RED_ERROR)
 		for e in errors:
 			print(e)
 		return None
@@ -263,8 +262,6 @@ def assemble_all_instructions(instrs: list[str], line_numbers: list[int]) -> lis
 resolve_macros(lines)
 loops, instrs, line_numbers = gather_loops_and_instrs(lines)
 resolve_loops(loops, instrs)
-
-print("\n".join(instrs))
 
 result = assemble_all_instructions(instrs, line_numbers)
 if not result:
