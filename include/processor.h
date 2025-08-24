@@ -4,11 +4,17 @@
 #include "instructions.h"
 #include "ememory.h"
 #include "errors.h"
+#include "pipeline.h"
 
 struct processor {
 	word_t regs[NUM_REGS];
 	struct ememory* memory;
 	uint64_t flag;
+
+	struct IF_stage if_stage;
+	struct ID_stage id_stage;
+	struct MEM_stage mem_stage;
+	struct EX_stage ex_stage;
 };
 
 /**

@@ -8,8 +8,7 @@
 
 // Constants:
 #define word_t 			uint32_t
-#define NUM_REGS		10
-#define IGNR			0
+#define NUM_REGS		9
 
 // Opcodes:
 #define OPCODES(X)		\
