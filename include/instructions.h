@@ -20,8 +20,8 @@
 	X(AND, 		4)	 	\
 	X(OR, 		5)	 	\
 	X(XOR, 		6)	 	\
-	X(MOVR, 	7)	 	\
-	X(MOVI, 	8)	 	\
+	X(MOV, 		7) 		\
+	X(CMP, 		8)		\
 	X(BEQ, 		9)	 	\
 	X(BNE, 		10)	 	\
 	X(BRN, 		11)	 
@@ -39,8 +39,7 @@ MACRO_DISPLAY(OPCODES, opcode_to_str)
 	X(R5,	5) 			\
 	X(R6,	6) 			\
 	X(R7,	7) 			\
-	X(PC,	8) 			\
-	X(EQ,	9) 
+	X(PC,	8) 
 
 MACRO_TRACK(REGISTERS)
 MACRO_DISPLAY(REGISTERS, reg_to_str)
@@ -50,7 +49,7 @@ struct instr {
 	unsigned char imm_flag : 1;
 	unsigned char dest : 4;
 	unsigned char src1 : 4;
-	uint16_t imm;
+	int16_t src2;
 };
 
 #define INSTR(OPCODE, DEST, SRC1, SRC2) (struct instr){OPCODE, DEST, SRC1, SRC2}

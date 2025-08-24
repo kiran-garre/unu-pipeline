@@ -22,15 +22,15 @@ OPCODES = {
 	"or": 5,
 	"xor": 6,
 	"mov": 7,
-	"beq": 8,
-	"bne": 9,
-	"brn": 10,
+	"cmp": 8,
+	"beq": 9,
+	"bne": 10,
+	"brn": 11,
 }
 REGS = {
     f"r{i}": i for i in range(8)
 }
-REGS["eq"] = 8
-REGS["pc"] = 9
+REGS["pc"] = 8
 
 
 # =============================
@@ -187,7 +187,7 @@ def assemble_instruction(instr: str) -> int:
 	dest = get_reg(parts[1])
 
 	# Handle mov as a special case
-	if opcode == OPCODES["mov"] or opcode == OPCODES["brn"]:
+	if parts[0] in ("mov", "brn", "bne", "beq", "cmp"):
 		if len(parts) != 3:
 			raise AssemblyError(f"invalid number of arguments for {parts[0]}")
 		elif parts[2][0] == "#":

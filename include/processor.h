@@ -8,6 +8,7 @@
 struct processor {
 	word_t regs[NUM_REGS];
 	struct ememory* memory;
+	uint64_t flag;
 };
 
 /**
