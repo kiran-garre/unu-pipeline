@@ -1,17 +1,123 @@
 #include "pipeline.h"
 #include "processor.h"
 
-// ================================
-//		 FORWARD DECLARATIONS
-// ================================
+// ============================
+//		 HELPER FUNCTIONS
+// ============================
 
-struct instr read_be_instr(char* buf);
-struct signal instr_to_signal(struct instr* in);
+#define RETURN_ALU_SIGNAL(OP)		\
+	return (struct signal) { 		\
+		.reg_write = 1, 			\
+		.mem_read = 0, 				\
+		.mem_write = 0, 			\
+		.alu_op = OP, 				\
+		.wb_src = 0, 				\
+		.branch = 0					\
+	}
 
-// Declare macros to silence errors
-#define CHECK_STAGE_ERR(...)
-#define ASSIGN_PROP_PC(...)
-#define ALU_SIGNAL(...)
+#define ASSIGN_PROP_PC(VAR, REG)	\
+	if (REG == PC) {				\
+		VAR = fetched.prop_pc;		\
+	} else {						\
+		VAR = READ_REG(proc, REG);	\
+	}
+
+#define CHECK_STAGE_ERR(STAGE, ERR_CODE)			\
+	if (ERR_CODE) {									\
+		return (STAGE) { .err_code = ERR_CODE };	\
+	}						
+	
+static inline char verify_reg(word_t value) {
+	if ((value < 0 || value >= NUM_REGS)) {
+		return INVALID_REG; 			
+	}
+	return 0;
+}
+
+static inline char verify_in_bounds(word_t value) {
+	if (value < STARTING_OFFSET || value >= MEM_SIZE) {
+		return SEGFAULT;
+	}
+	return 0;
+}	
+
+struct instr read_be_instr(char* buf) {
+	struct instr in;
+	in.opcode = (buf[0] >> 1) & 0x7F;
+	in.imm_flag = buf[0] & 0x1;
+	in.dest = (buf[1] >> 4) & 0x0F;
+	in.src1 = buf[1] & 0x0F;
+	in.src2 = ((int16_t) buf[2] << 8) | buf[3];
+
+	return in;
+}
+
+char min(char x, char y) {
+	return (x < y) ? x : y;
+}
+
+struct signal instr_to_signal(struct instr* in) {
+
+	switch (in->opcode) {
+		// Reorder instruction arguments
+		// This is a hacky solution for letting CMP results to go to the 
+		// flag register and unifying syntax between MOV, BRN, etc.
+		case BRN:
+		case BNE:
+		case BEQ:
+			in->src1 = in->dest;
+			break;
+		case CMP:
+			in->src1 = in->dest;
+			in->dest = FLAG;
+	}
+
+	switch (in->opcode) {
+		case LOAD:
+			return (struct signal) { 
+				.reg_write = 1, 
+				.mem_read = 1, 
+				.mem_write = 0, 
+				.alu_op = ALU_ADD, 
+				.wb_src = 1,
+				.branch = 0 
+			};
+		case STORE:
+			return (struct signal) { 
+				.reg_write = 0, 
+				.mem_read = 0, 
+				.mem_write = 1, 
+				.alu_op = ALU_ADD,  
+				.wb_src = 0,
+				.branch = 0
+			};
+		case ADD:
+			RETURN_ALU_SIGNAL(ALU_ADD);
+		case SUB:
+			RETURN_ALU_SIGNAL(ALU_SUB);
+		case AND:
+			RETURN_ALU_SIGNAL(ALU_AND);
+		case OR:
+			RETURN_ALU_SIGNAL(ALU_OR);
+		case XOR:
+			RETURN_ALU_SIGNAL(ALU_XOR);
+		case MOV:
+			RETURN_ALU_SIGNAL(ALU_PASS);
+		case CMP:
+			RETURN_ALU_SIGNAL(ALU_SUB);
+		case BRN:
+		case BNE:
+		case BEQ:
+			return (struct signal) { 
+				.reg_write = 0, 
+				.mem_read = 0, 
+				.mem_write = 0, 
+				.alu_op = ALU_ADD, 
+				.wb_src = 0, 
+				.branch = 1
+			};
+	}
+} 
 
 
 // =============================
@@ -26,6 +132,10 @@ struct IF_stage fetch(struct processor* proc) {
 
 struct ID_stage decode(struct processor* proc, struct IF_stage fetched) {
 	struct instr* in = &fetched.fetched_instr;
+
+	if (in->opcode < 0 || in->opcode >= NUM_OPCODES) {
+		return (struct ID_stage) { .err_code = INVALID_OPCODE };
+	}
 
 	CHECK_STAGE_ERR(struct ID_stage, verify_reg(in->dest));
 	CHECK_STAGE_ERR(struct ID_stage, verify_reg(in->src1));
@@ -50,53 +160,9 @@ struct ID_stage decode(struct processor* proc, struct IF_stage fetched) {
 	};
 }
 
-struct signal instr_to_signal(struct instr* in) {
-	switch (in->opcode) {
-		case LOAD:
-			return (struct signal) { 
-				.reg_write = 1, 
-				.mem_read = 1, 
-				.mem_write = 0, 
-				.alu_op = ALU_ADD, 
-				.wb_src = 1 
-			};
-		case STORE:
-			return (struct signal) { 
-				.reg_write = 0, 
-				.mem_read = 0, 
-				.mem_write = 1, 
-				.alu_op = ALU_ADD,  
-				.wb_src = 0 
-			};
-		case ADD:
-			ALU_SIGNAL(ALU_ADD);
-		case SUB:
-			ALU_SIGNAL(ALU_SUB);
-		case AND:
-			ALU_SIGNAL(ALU_AND);
-		case OR:
-			ALU_SIGNAL(ALU_OR);
-		case XOR:
-			ALU_SIGNAL(ALU_XOR);
-		case MOV:
-			ALU_SIGNAL(ALU_PASS);
-		case CMP:
-			ALU_SIGNAL(ALU_SUB);
-		case BRN:
-		case BNE:
-		case BEQ:
-			return (struct signal) { 
-				.reg_write = 0, 
-				.mem_read = 0, 
-				.mem_write = 0, 
-				.alu_op = ALU_ADD, 
-				.wb_src = 0 
-			};
-		
-	}
-} 
 
-struct EX_stage execute(struct ID_stage decoded) {
+
+struct EX_stage execute(struct processor* proc, struct ID_stage decoded) {
 	word_t alu_result;
 	switch (decoded.sig.alu_op) {
 		case ALU_ADD:
@@ -111,6 +177,10 @@ struct EX_stage execute(struct ID_stage decoded) {
 			alu_result = decoded.src1_data ^ decoded.src2_data;
 		case ALU_PASS:
 			alu_result = decoded.src2_data;
+	}
+
+	if (decoded.sig.branch) {
+		proc->regs[PC] = alu_result;
 	}
 
 	return (struct EX_stage) { 
@@ -144,64 +214,10 @@ struct WB_stage write_back(struct processor* proc, struct MEM_stage accessed) {
 	if (accessed.sig.reg_write) {
 		CHECK_STAGE_ERR(struct WB_stage, verify_reg(accessed.write_reg));
 		if (accessed.sig.wb_src) {
-			proc->regs[accessed.write_reg] = accessed.mem_result;
+			WRITE_REG(proc, accessed.write_reg, accessed.mem_result);
 		} else {
-			proc->regs[accessed.write_reg] = accessed.alu_result;
+			WRITE_REG(proc, accessed.write_reg, accessed.alu_result);
 		}
 	}
-}
-
-
-// ============================
-//		 HELPER FUNCTIONS
-// ============================
-
-#define ALU_SIGNAL(OP)				\
-	return (struct signal) { 		\
-		.reg_write = 1, 			\
-		.mem_read = 0, 				\
-		.mem_write = 0, 			\
-		.alu_op = OP, 				\
-		.wb_src = 0 				\
-	}
-
-#define ASSIGN_PROP_PC(VAR, REG)	\
-	if (REG == PC) {				\
-		VAR = fetched.prop_pc;		\
-	} else {						\
-		VAR = proc->regs[REG];		\
-	}
-
-#define CHECK_STAGE_ERR(STAGE, ERR_CODE)			\
-	if (ERR_CODE) {									\
-		return (STAGE) { .err_code = ERR_CODE };	\
-	}						
-	
-static inline char verify_reg(word_t value) {
-	if ((value < 0 || value >= NUM_REGS)) {
-		return INVALID_OPCODE_ERR; 			
-	}
-	return 0;
-}
-
-static inline char verify_in_bounds(word_t value) {
-	if (value < STARTING_OFFSET || value >= MEM_SIZE) {
-		return SEGFAULT;
-	}
-	return 0;
-}	
-
-struct instr read_be_instr(char* buf) {
-	struct instr in;
-	in.opcode = (buf[0] >> 1) & 0x7F;
-	in.imm_flag = buf[0] & 0x1;
-	in.dest = (buf[1] >> 4) & 0x0F;
-	in.src1 = buf[1] & 0x0F;
-	in.src2 = ((int16_t) buf[2] << 8) | buf[3];
-
-	return in;
-}
-
-char min(char x, char y) {
-	return (x < y) ? x : y;
+	return (struct WB_stage) { .err_code = 0 };
 }

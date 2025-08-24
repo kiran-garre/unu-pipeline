@@ -21,8 +21,11 @@
 
 #define PIPELINE_ERRS(X) 			\
     X(INVALID_OPCODE, 	-100) 		\
-    X(INVALID_REG,   	-101) 		\	
+    X(INVALID_REG,   	-101) 		\
     X(SEGFAULT,  		-102)
+
+MACRO_TRACK(PIPELINE_ERRS)
+MACRO_DISPLAY(PIPELINE_ERRS, pipeline_err_to_string)
 
 
 #define ALU_OP(X)		\
@@ -42,6 +45,7 @@ struct signal {
 	unsigned char mem_write : 1;
 	unsigned char alu_op	: 3;
 	unsigned char wb_src    : 1;	  // 0 for register, 1 for memory
+	unsigned char branch	: 1;
 };
 
 struct IF_stage {

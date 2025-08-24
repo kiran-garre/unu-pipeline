@@ -8,7 +8,8 @@
 
 // Constants:
 #define word_t 			uint32_t
-#define NUM_REGS		9
+#define NUM_REGS		10
+#define NUM_OPCODES		12
 
 // Opcodes:
 #define OPCODES(X)		\
@@ -38,7 +39,8 @@ MACRO_DISPLAY(OPCODES, opcode_to_str)
 	X(R5,	5) 			\
 	X(R6,	6) 			\
 	X(R7,	7) 			\
-	X(PC,	8) 
+	X(PC,	8) 			\
+	X(FLAG, 9)
 
 MACRO_TRACK(REGISTERS)
 MACRO_DISPLAY(REGISTERS, reg_to_str)
@@ -51,7 +53,10 @@ struct instr {
 	int16_t src2;
 };
 
-#define INSTR(OPCODE, DEST, SRC1, SRC2) (struct instr){OPCODE, DEST, SRC1, SRC2}
+#define READ_REG(PROC, REG) ((REG == FLAG) ? (PROC)->flag : (PROC)->regs[REG])
+#define WRITE_REG(PROC, REG, VALUE) \
+    ((REG) == FLAG ? ((PROC)->flag = (uint64_t)(VALUE)) : ((PROC)->regs[(REG)] = (uint32_t)(VALUE)))
+
 
 #endif // INSTRUCTIONS
 
