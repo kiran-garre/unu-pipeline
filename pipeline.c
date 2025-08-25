@@ -52,12 +52,7 @@ struct instr read_be_instr(char* buf) {
 	return in;
 }
 
-char min(char x, char y) {
-	return (x < y) ? x : y;
-}
-
 struct signal instr_to_signal(struct instr* in) {
-
 	switch (in->opcode) {
 		// Reorder instruction arguments
 		// This is a hacky solution for letting CMP results to go to the 
@@ -127,7 +122,8 @@ struct signal instr_to_signal(struct instr* in) {
 struct IF_stage fetch(struct processor* proc) {
 	CHECK_STAGE_ERR(struct IF_stage, verify_in_bounds(proc->regs[PC]));
 	struct instr in = read_be_instr(proc->memory->data + proc->regs[PC]);
-	return (struct IF_stage) { .fetched_instr = in, .prop_pc = proc->regs[PC] };
+	proc->regs[PC] += sizeof(struct instr);
+	return (struct IF_stage) { .fetched_instr = in, .prop_pc = proc->regs[PC] - sizeof(struct instr) };
 }
 
 struct ID_stage decode(struct processor* proc, struct IF_stage fetched) {
@@ -156,11 +152,10 @@ struct ID_stage decode(struct processor* proc, struct IF_stage fetched) {
 		.write_reg = in->dest, 
 		.dest_data = dest_data,
 		.src1_data = src1_data,
-		.src2_data = src2_data
+		.src2_data = src2_data,
+		.sig = sig,
 	};
 }
-
-
 
 struct EX_stage execute(struct processor* proc, struct ID_stage decoded) {
 	word_t alu_result;

@@ -14,14 +14,14 @@ MACRO_KEYWORD = '.macro'
 DELIMTER_SPLIT = '(\s+|,)'
 COMMENT_SYMBOL = ';'
 OPCODES = {
-	"load": 0,
-	"store": 1,
-	"add": 2,
-	"sub": 3,
-	"and": 4,
-	"or": 5,
-	"xor": 6,
-	"mov": 7,
+	"mov": 0,
+	"load": 1,
+	"store": 2,
+	"add": 3,
+	"sub": 4,
+	"and": 5,
+	"or": 6,
+	"xor": 7,
 	"cmp": 8,
 	"beq": 9,
 	"bne": 10,
