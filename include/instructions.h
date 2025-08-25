@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-
 #include "macro_utils.h"
 
 // Constants:
@@ -13,14 +12,14 @@
 
 // Opcodes:
 #define OPCODES(X)		\
-	X(LOAD, 	0)	 	\
-	X(STORE, 	1)	 	\
-	X(ADD, 		2)	 	\
-	X(SUB, 		3)	 	\
-	X(AND, 		4)	 	\
-	X(OR, 		5)	 	\
-	X(XOR, 		6)	 	\
-	X(MOV, 		7) 		\
+	X(MOV, 		0)	 	\
+	X(LOAD, 	1)		\
+	X(STORE, 	2)	 	\
+	X(ADD, 		3)	 	\
+	X(SUB, 		4)	 	\
+	X(AND, 		5)	 	\
+	X(OR, 		6)	 	\
+	X(XOR, 		7)	 	\
 	X(CMP, 		8)		\
 	X(BEQ, 		9)	 	\
 	X(BNE, 		10)	 	\

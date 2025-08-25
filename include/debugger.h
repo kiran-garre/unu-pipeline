@@ -33,6 +33,6 @@ void regs_(struct processor* proc, int num_args, ...);
 #define regs(proc, ...) \
 	regs_(proc, PP_NARG(__VA_ARGS__), __VA_ARGS__)
 
-#define ALL_REGS 	R0, R1, R2, R3, R4, R5, R6, R7, EQ, PC
+#define ALL_REGS 	R0, R1, R2, R3, R4, R5, R6, R7, PC
 
 #endif // DEBUGGER

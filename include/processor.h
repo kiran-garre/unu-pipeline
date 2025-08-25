@@ -3,7 +3,7 @@
 
 #include "instructions.h"
 #include "ememory.h"
-#include "errors.h"
+#include "stages.h"
 #include "pipeline.h"
 
 struct processor {
@@ -18,7 +18,7 @@ struct processor {
 };
 
 /**
- * Returns a new processor with uninitialized ememory
+ * Returns a new processor
  */
 struct processor new_processor(struct ememory* memory);
 

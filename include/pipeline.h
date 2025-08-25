@@ -3,6 +3,10 @@
 
 #include "instructions.h"
 #include "macro_utils.h"
+#include "stages.h"
+
+// Forward declare processor
+struct processor;
 
 /**
  * DETAILS:
@@ -16,7 +20,7 @@
  * 
  * Each struct contains the results of its stage. For example, the IF stage 
  * produces a fetched instruction as a result. Since the WB stage is the final
- * stage, it produces no results, and there's no struct dedicated to it.
+ * stage, it produces no results except for an error code.
  */
 
 #define PIPELINE_ERRS(X) 			\
@@ -27,66 +31,26 @@
 MACRO_TRACK(PIPELINE_ERRS)
 MACRO_DISPLAY(PIPELINE_ERRS, pipeline_err_to_string)
 
-
 #define ALU_OP(X)		\
-	X(ALU_ADD, 	0)		\
-	X(ALU_SUB, 	1)		\
-	X(ALU_AND, 	2)		\
-	X(ALU_OR, 	3)		\
-	X(ALU_XOR, 	4)		\
-	X(ALU_PASS, 5)
+	X(ALU_PASS, 0)		\
+	X(ALU_ADD, 	1)		\
+	X(ALU_SUB, 	2)		\
+	X(ALU_AND, 	3)		\
+	X(ALU_OR, 	4)		\
+	X(ALU_XOR, 	5)		\
+	
 
 MACRO_TRACK(ALU_OP)
 MACRO_DISPLAY(ALU_OP, op_to_str)
 
-struct signal {
-	unsigned char reg_write : 1;
-	unsigned char mem_read  : 1;
-	unsigned char mem_write : 1;
-	unsigned char alu_op	: 3;
-	unsigned char wb_src    : 1;	  // 0 for register, 1 for memory
-	unsigned char branch	: 1;
-};
+struct IF_stage fetch(struct processor* proc);
 
-struct IF_stage {
-	struct instr fetched_instr;
-	word_t prop_pc;
+struct ID_stage decode(struct processor* proc, struct IF_stage fetched);
 
-	char err_code;
-};
+struct EX_stage execute(struct processor* proc, struct ID_stage decoded);
 
-struct ID_stage {
-	char write_reg;
-	word_t dest_data;
-	word_t src1_data;
-	word_t src2_data;
+struct MEM_stage memory_access(struct processor* proc, struct EX_stage executed);
 
-	struct signal sig;
-
-	char err_code;
-};
-
-struct EX_stage {
-	char write_reg;
-	word_t dest_data;
-	word_t alu_result;
-
-	struct signal sig;
-};
-
-struct MEM_stage {
-	char write_reg;
-	word_t dest_data;
-	word_t mem_result;
-	word_t alu_result;
-
-	struct signal sig;
-
-	char err_code;
-};
-
-struct WB_stage {
-	char err_code;
-};
+struct WB_stage write_back(struct processor* proc, struct MEM_stage accessed);
 
 #endif // PIPELINE
