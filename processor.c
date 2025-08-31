@@ -1,30 +1,52 @@
 #include "processor.h"
 #include "pipeline.h"
+#include "debugger.h"
 #include <stdio.h>
 
 struct processor new_processor(struct ememory* memory) {
 	return (struct processor) { .memory = memory };
 }
 
-#define CHECK_ERR(STAGE) if (STAGE.err_code) { return STAGE.err_code; }
+#define CHECK_ERR(STAGE) 														\
+	if (STAGE.err.err_code) { 													\
+		printf("Pipeline error occurred in %s()\n", STAGE.err.function_name); 	\
+		return STAGE.err.err_code; 												\
+	}
+
+static inline void flush_stage(void* stage, unsigned int stage_size) {
+	memset(stage, 0, stage_size);
+}
+
+/**
+ * This is more macro abuse. This should never be done.
+ */
+#define EXECUTE_CTRL(PROC, STAGE, FN_STMT)		\
+	if (!proc->pipeline_ctrl.stall) {			\
+		STAGE = FN_STMT;						\
+	}											\
+	if (proc->pipeline_ctrl.flush) {			\
+		flush_stage(&STAGE, sizeof(STAGE));		\
+	}											\
+	CHECK_ERR(STAGE)					
 
 int clock_cycle(struct processor* proc) {
-	struct WB_stage wb_stage = write_back(proc, proc->mem_stage);
-	CHECK_ERR(wb_stage);
-	proc->mem_stage = memory_access(proc, proc->ex_stage);
-	CHECK_ERR(proc->mem_stage);
-	proc->ex_stage = execute(proc, proc->id_stage);
-	CHECK_ERR(proc->ex_stage);
-	proc->id_stage = decode(proc, proc->if_stage);
-	CHECK_ERR(proc->id_stage);
-	proc->if_stage = fetch(proc);
-	CHECK_ERR(proc->if_stage);
+
+	// Reset ctrl on every cycle
+	memset(&proc->pipeline_ctrl, 0, sizeof(struct pipeline_ctrl));
+
+	struct WB_stage wb_stage;
+	EXECUTE_CTRL(proc, wb_stage, write_back(proc, proc->mem_stage));
+	EXECUTE_CTRL(proc, proc->mem_stage, memory_access(proc, proc->ex_stage));
+	EXECUTE_CTRL(proc, proc->ex_stage, execute(proc, proc->id_stage));
+	EXECUTE_CTRL(proc, proc->id_stage, decode(proc, proc->if_stage));
+	EXECUTE_CTRL(proc, proc->if_stage, fetch(proc));
 	return 0;
 }
 
 int run(struct processor* proc) {
 	int status;
 	while ((status = clock_cycle(proc)) == 0)
+		regs(proc, ALL_REGS);
 		;
 	return status;
 }

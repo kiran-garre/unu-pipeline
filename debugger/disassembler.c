@@ -19,32 +19,24 @@ void instr_to_str(struct instr* in, char* buf) {
 				opcode_to_str(in->opcode), 
 				reg_to_str(in->dest),
 				reg_to_str(in->src1),
-				reg_to_str(in->imm)
+				reg_to_str(in->src2)
 			);
 			return;
 		
-		case MOVR:
+		case MOV:
 		case BEQ:
 		case BNE:
 			sprintf(buf, "%s, %s, %s",
 				opcode_to_str(in->opcode),
 				reg_to_str(in->dest),
-				reg_to_str(in->imm)
-			);
-			return;
-
-		case MOVI:
-			sprintf(buf, "%s, %s, %d",
-				opcode_to_str(in->opcode),
-				reg_to_str(in->dest),
-				in->imm
+				reg_to_str(in->src2)
 			);
 			return;
 
 		case BRN:
 			sprintf(buf, "%s, %s",
 				opcode_to_str(in->opcode),
-				reg_to_str(in->imm)
+				reg_to_str(in->src2)
 			);
 			return;
 		

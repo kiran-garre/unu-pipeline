@@ -15,6 +15,8 @@ struct processor {
 	struct ID_stage id_stage;
 	struct MEM_stage mem_stage;
 	struct EX_stage ex_stage;
+
+	struct pipeline_ctrl pipeline_ctrl;
 };
 
 /**

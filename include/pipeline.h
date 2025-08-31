@@ -26,22 +26,11 @@ struct processor;
 #define PIPELINE_ERRS(X) 			\
     X(INVALID_OPCODE, 	-100) 		\
     X(INVALID_REG,   	-101) 		\
-    X(SEGFAULT,  		-102)
+	X(INVALID_OP, 		-102)		\
+    X(SEGFAULT,  		-103)
 
 MACRO_TRACK(PIPELINE_ERRS)
 MACRO_DISPLAY(PIPELINE_ERRS, pipeline_err_to_string)
-
-#define ALU_OP(X)		\
-	X(ALU_PASS, 0)		\
-	X(ALU_ADD, 	1)		\
-	X(ALU_SUB, 	2)		\
-	X(ALU_AND, 	3)		\
-	X(ALU_OR, 	4)		\
-	X(ALU_XOR, 	5)		\
-	
-
-MACRO_TRACK(ALU_OP)
-MACRO_DISPLAY(ALU_OP, op_to_str)
 
 struct IF_stage fetch(struct processor* proc);
 

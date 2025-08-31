@@ -54,7 +54,7 @@ struct instr {
 
 #define READ_REG(PROC, REG) ((REG == FLAG) ? (PROC)->flag : (PROC)->regs[REG])
 #define WRITE_REG(PROC, REG, VALUE) \
-    ((REG) == FLAG ? ((PROC)->flag = (uint64_t)(VALUE)) : ((PROC)->regs[(REG)] = (uint32_t)(VALUE)))
+    ((REG) == FLAG ? ((PROC)->flag = (int64_t)(VALUE)) : ((PROC)->regs[(REG)] = (word_t)(VALUE)))
 
 
 #endif // INSTRUCTIONS

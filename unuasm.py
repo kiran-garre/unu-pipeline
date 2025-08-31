@@ -118,6 +118,7 @@ def gather_loops_and_instrs(lines: list[str]) -> tuple[dict, list[str], list[int
 			instrs.append(line)
 			line_numbers.append(i + 1)
 			pc += 4
+			continue
 	
 	return loops, instrs, line_numbers
 
@@ -219,6 +220,7 @@ def assemble_instruction(instr: str) -> int:
 	result |= (dest & 0xF) << 20
 	result |= (src1 & 0xF) << 16
 	result |= (src2 & 0xFFFF)
+	print(format(result, "032b"))
 	return struct.pack(">I", result)
 		
 
