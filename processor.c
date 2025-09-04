@@ -32,13 +32,21 @@ static inline void flush_stage(void* stage, unsigned int stage_size) {
 int clock_cycle(struct processor* proc) {
 
 	// Reset ctrl on every cycle
-	memset(&proc->pipeline_ctrl, 0, sizeof(struct pipeline_ctrl));
+	proc->pipeline_ctrl.flush = 0;
+	proc->pipeline_ctrl.stall = 0;
 
 	struct WB_stage wb_stage;
 	EXECUTE_CTRL(proc, wb_stage, write_back(proc, proc->mem_stage));
 	EXECUTE_CTRL(proc, proc->mem_stage, memory_access(proc, proc->ex_stage));
 	EXECUTE_CTRL(proc, proc->ex_stage, execute(proc, proc->id_stage));
-	EXECUTE_CTRL(proc, proc->id_stage, decode(proc, proc->if_stage));
+	
+	if (proc->pipeline_ctrl.bubble_next) {
+		flush_stage(&proc->id_stage, sizeof(struct ID_stage));
+		proc->pipeline_ctrl.bubble_next = 0;
+	} else {
+		EXECUTE_CTRL(proc, proc->id_stage, decode(proc, proc->if_stage));
+	}
+	
 	EXECUTE_CTRL(proc, proc->if_stage, fetch(proc));
 	return 0;
 }
@@ -46,7 +54,7 @@ int clock_cycle(struct processor* proc) {
 int run(struct processor* proc) {
 	int status;
 	while ((status = clock_cycle(proc)) == 0)
-		regs(proc, ALL_REGS);
+		// regs(proc, ALL_REGS);
 		;
 	return status;
 }

@@ -79,6 +79,7 @@ struct WB_stage {
 struct pipeline_ctrl {
 	unsigned char flush: 1;
 	unsigned char stall: 1;
+	unsigned char bubble_next: 1;
 };
 
 #endif // STAGES
