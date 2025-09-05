@@ -139,7 +139,11 @@ struct IF_stage fetch(struct processor* proc) {
 	CHECK_STAGE_ERR(struct IF_stage, verify_in_bounds(proc->regs[PC]));
 	struct instr in = read_be_instr(proc->memory->data + proc->regs[PC]);
 	proc->regs[PC] += sizeof(struct instr);
-	return (struct IF_stage) { .fetched_instr = in, .prop_pc = proc->regs[PC] - sizeof(struct instr) };
+	return (struct IF_stage) { 
+		.fetched_instr = in, 
+		.prop_pc = proc->regs[PC] - sizeof(struct instr), 
+		.dbg = (struct debug_base) { in } 
+	};
 }
 
 struct ID_stage decode(struct processor* proc, struct IF_stage fetched) {
@@ -177,6 +181,7 @@ struct ID_stage decode(struct processor* proc, struct IF_stage fetched) {
 		.src1_data = src1_data,
 		.src2_data = src2_data,
 		.sig = sig,
+		.dbg = fetched.dbg,
 	};
 }
 
@@ -212,6 +217,7 @@ struct EX_stage execute(struct processor* proc, struct ID_stage decoded) {
 		if (evaluate_cmp(proc->flag, decoded.branch_type)) {
 			WRITE_REG(proc, PC, alu_result);
 			proc->pipeline_ctrl.flush = 1;
+			proc->pipeline_ctrl.stall = 1;
 		}
 	}
 
@@ -219,7 +225,8 @@ struct EX_stage execute(struct processor* proc, struct ID_stage decoded) {
 		.write_reg = decoded.write_reg, 
 		.dest_data = decoded.dest_data, 
 		.alu_result = alu_result, 
-		.sig = decoded.sig
+		.sig = decoded.sig,
+		.dbg = decoded.dbg,
 	};
 }
 
@@ -239,6 +246,7 @@ struct MEM_stage memory_access(struct processor* proc, struct EX_stage executed)
 		.mem_result = mem_result, 
 		.alu_result = executed.alu_result,
 		.sig = executed.sig,
+		.dbg = executed.dbg,
 	};
 }
 

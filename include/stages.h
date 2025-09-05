@@ -32,11 +32,20 @@ struct err_base {
 	char* dump;
 };
 
+/**
+ * Used for pipeline debugging ONLY. Debug values will not be used in pipeline
+ * control flow
+ */
+struct debug_base {
+	struct instr in;
+};
+
 struct IF_stage {
 	struct instr fetched_instr;
 	word_t prop_pc;
 	
 	struct err_base err;
+	struct debug_base dbg;
 };
 
 struct ID_stage {
@@ -49,6 +58,7 @@ struct ID_stage {
 	struct signal sig;
 
 	struct err_base err;
+	struct debug_base dbg;
 };
 
 struct EX_stage {
@@ -59,6 +69,7 @@ struct EX_stage {
 	struct signal sig;
 
 	struct err_base err;
+	struct debug_base dbg;
 };
 
 struct MEM_stage {
@@ -70,10 +81,12 @@ struct MEM_stage {
 	struct signal sig;
 
 	struct err_base err;
+	struct debug_base dbg;
 };
 
 struct WB_stage {
 	struct err_base err;
+	struct debug_base dbg;
 };
 
 struct pipeline_ctrl {

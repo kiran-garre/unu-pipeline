@@ -48,13 +48,23 @@ int clock_cycle(struct processor* proc) {
 	}
 	
 	EXECUTE_CTRL(proc, proc->if_stage, fetch(proc));
-	return 0;
+
+	char buf[64];
+	// instr_to_str(&proc->if_stage.dbg.in, buf);
+	// printf("\nIF instruction: %s\n", buf);
+	// instr_to_str(&proc->id_stage.dbg.in, buf);
+	// printf("ID instruction: %s\n", buf);
+	// instr_to_str(&proc->ex_stage.dbg.in, buf);
+	// printf("EX instruction: %s\n", buf);
+	// instr_to_str(&proc->mem_stage.dbg.in, buf);
+	// printf("MEM instruction: %s\n", buf);
+	return 0;	
 }
 
 int run(struct processor* proc) {
 	int status;
 	while ((status = clock_cycle(proc)) == 0)
-		// regs(proc, ALL_REGS);
+		regs(proc, ALL_REGS);
 		;
 	return status;
 }
